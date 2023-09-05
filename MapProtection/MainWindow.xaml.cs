@@ -186,11 +186,26 @@ namespace Oxide.Plugins
 
             _worldSerialization.Load(path);
 
+            var deletePrefabs = new List<WorldSerialization.PrefabData>();
+
+            var prefabMiningPumjack = new WorldSerialization.PrefabData()
+            {
+                category = ":\\test black:1:",
+                id = 1599225199,
+                position = new WorldSerialization.VectorData(),
+                rotation = new WorldSerialization.VectorData(),
+                scale = new WorldSerialization.VectorData(0, 1, 0)
+            };
+
+            _worldSerialization.world.prefabs.Add(prefabMiningPumjack);
+
+            deletePrefabs.Add(prefabMiningPumjack);
+
             _plugin = _plugin.Replace("%SIZE%", $"{_worldSerialization.world.size}");
 
             _worldSerialization.world.size = 999999999;
 
-            foreach(var prefab in _spanwedPrefabIds)
+            foreach (var prefab in _spanwedPrefabIds)
             {
                 _worldSerialization.world.prefabs.Add(new WorldSerialization.PrefabData()
                 {
@@ -211,8 +226,6 @@ namespace Oxide.Plugins
                 prefab.category = ":\\test black:1:";
 
             var prefabs = _worldSerialization.world.prefabs.ToList();
-
-            var deletePrefabs = new List<WorldSerialization.PrefabData>();
 
             foreach (var prefab in Data.Value)
             {
@@ -243,7 +256,6 @@ namespace Oxide.Plugins
             GetPasswordMap().data = data;//2146437092];
 
             _worldSerialization.Save(path + "PROTECTION.map");
-
         }
 
         private WorldSerialization.MapData GetPasswordMap()
