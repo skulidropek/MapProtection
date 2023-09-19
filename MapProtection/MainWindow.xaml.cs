@@ -25,43 +25,62 @@ namespace MapProtection
     public partial class MainWindow : Window
     {
         private string _plugin = @"
+// Reference: 0Harmony
+using Harmony;
+using Newtonsoft.Json;
+using Oxide.Core;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
-using ProtoBuf;
 using UnityEngine;
 
 namespace Oxide.Plugins
 {
-    [Info(""MapProtection"", ""https://discord.gg/dNGbxafuJn"", ""1.3.11"")]
+    [Info(""MapProtection"", ""https://discord.gg/4G5s2eepu8"", ""1.3.11"")]
     [Description(""MapProtection"")]
     class MapProtection : RustPlugin
     {
-        string json = @""
-                            %JSON%
-                        "";
-
+        private HarmonyInstance _harmony; //Reference to harmony
+        string json = @""%JSON%"";
         List<PrefabData> prefabDatas = new List<PrefabData>();
 
         private void Init()
         {
             prefabDatas = JsonConvert.DeserializeObject<List<PrefabData>>(json);
+            _harmony = HarmonyInstance.Create(Name + ""PATCH"");
+            Type[] patchType ={AccessTools.Inner(typeof(MapProtection), ""OnWorldLoad_hook""),};
+            foreach (var t in patchType) { new PatchProcessor(_harmony, t, HarmonyMethod.Merge(t.GetHarmonyMethods())).Patch(); } //Patch Harmony Code In
         }
 
         private void OnServerInitialized()
         {
-            foreach (var baseEntity in UnityEngine.Object.FindObjectsOfType<BaseEntity>())
+            foreach (var baseEntity in BaseNetworkable.serverEntities.entityList.Values)
             {
-                var prefabData = prefabDatas.FirstOrDefault(s =>
-                        s.position == baseEntity.transform.position &&
-                        s.rotation == baseEntity.transform.rotation &&
-                        s.id == baseEntity.prefabID);
-
-                if (prefabData != null)
+                if (baseEntity is BaseEntity)
                 {
-                    baseEntity.Kill(BaseNetworkable.DestroyMode.Gib);
+                    var prefabData = prefabDatas.FirstOrDefault(s =>
+                            s.position == baseEntity.transform.position &&
+                            s.rotation == baseEntity.transform.rotation &&
+                            s.id == baseEntity.prefabID);
+
+                    if (prefabData != null)
+                    {
+                        baseEntity.Kill(BaseNetworkable.DestroyMode.Gib);
+                    }
                 }
+            }
+        }
+
+        private void Unload() { _harmony.UnpatchAll(Name + ""PATCH""); }//Remove harmony
+
+        [HarmonyPatch(typeof(WorldSerialization), nameof(WorldSerialization.Load),typeof(string))] 
+        internal class OnWorldLoad_hook
+        {
+            [HarmonyPostfix] //Postfix runs after orignal code
+            static void Postfix(WorldSerialization __instance)
+            {
+               Interface.CallHook(""OnWorldLoad"", __instance); //Calls the hook
             }
         }
 
@@ -119,10 +138,6 @@ namespace Oxide.Plugins
             [ProtoMember(2)] public float y;
             [ProtoMember(3)] public float z;
 
-            public VectorData()
-            {
-            }
-
             public VectorData(float x, float y, float z)
             {
                 this.x = x;
@@ -151,7 +166,7 @@ namespace Oxide.Plugins
             }
         }
     }
-} 
+}
                         ";
         private static List<string> _spanwedPrefabIds = new List<string>()
         {
