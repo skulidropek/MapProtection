@@ -66,7 +66,7 @@ namespace Oxide.Plugins
 
                     if (prefabData != null)
                     {
-                        baseEntity.Kill(BaseNetworkable.DestroyMode.Gib);
+                        UnityEngine.Object.Destroy(baseEntity.gameObject);
                     }
                 }
             }
@@ -98,7 +98,7 @@ namespace Oxide.Plugins
 
             if (prefabData != null)
             {
-                baseEntity.Kill(BaseNetworkable.DestroyMode.Gib);
+                UnityEngine.Object.Destroy(baseEntity.gameObject);
             }
         }
 
