@@ -2,27 +2,25 @@
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
-using static System.Windows.Forms.AxHost;
 
 namespace MapToolGUI
 {
     public partial class Form1 : Form
     {
-        WorldSerialization _worldSerialization = new WorldSerialization();
-        Random rnd = new Random();
-        int _size = 0;
-        List<uint> ents = new List<uint>();
-        string plugin = "";
-        string URI = "https://raw.githubusercontent.com/bmgjet/MapProtection/master/Data.config";
-        string header = "application/x-www-form-urlencoded";
-        string useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0";
-        string catstring = @":\\test black:1:";
-        uint[] UIinterface = new uint[] { 3598117754, 375066659, 545721267, 2749182564, 427338728, 1237378647, 3855189929, 3036094912, 2749259013, 1799711011 };
+        private WorldSerialization _worldSerialization = new WorldSerialization();
+        private Random _rnd = new Random();
+        private int _size = 0;
+        private List<uint> _ents = new List<uint>();
+        private string _plugin;
+        private string _uri = @"https://raw.githubusercontent.com/bmgjet/MapProtection/master/Data.config";
+        private string _header = "application/x-www-form-urlencoded";
+        private string _useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0";
 
         public class Compression
         {
@@ -92,7 +90,7 @@ namespace MapToolGUI
             }
         }
 
-        public static string VectorData2String(VectorData vectorData) { return (vectorData.x + " " + vectorData.y + " " + vectorData.z).Replace(",", "."); }
+        public static string VectorData2String(VectorData vectorData) { return vectorData.x.ToString(CultureInfo.InvariantCulture) + " " + vectorData.y.ToString(CultureInfo.InvariantCulture) + " " + vectorData.z.ToString(CultureInfo.InvariantCulture); }
 
         public Form1() { InitializeComponent(); }
 
@@ -104,7 +102,7 @@ namespace MapToolGUI
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            using (var webClient = new System.Net.WebClient()) { URI = Encoding.UTF8.GetString(Compression.Uncompress(Convert.FromBase64String(webClient.DownloadString(URI)))); }
+            using (var webClient = new System.Net.WebClient()) { _uri = Encoding.UTF8.GetString(Compression.Uncompress(Convert.FromBase64String(webClient.DownloadString(_uri)))); }
             SpamAmount.SelectedIndex = 3;
         }
 
@@ -129,10 +127,10 @@ namespace MapToolGUI
                 MapFile.Text = openFileDialog1.FileName;
                 if (File.Exists(MapFile.Text))
                 {
-                    if (ents.Count == 0) { GetPrefabIDS(); }
+                    if (_ents.Count == 0) { GetPrefabIDS(); }
                     AddProtection.Enabled = true;
                     _worldSerialization.Load(MapFile.Text);
-                    plugin = Encoding.UTF8.GetString(Compression.Uncompress(Convert.FromBase64String(GetPluginTemplate())));
+                    if (string.IsNullOrEmpty(_plugin)){ _plugin = Encoding.UTF8.GetString(Compression.Uncompress(Convert.FromBase64String(GetPluginTemplate()))); }
                     return;
                 }
             }
@@ -140,22 +138,17 @@ namespace MapToolGUI
 
         private bool IsEntity(uint EntityID)
         {
-            if (ents.Contains(EntityID)) { return true; }
+            if (_ents.Contains(EntityID)) { return true; }
             return false;
         }
 
-        private MapData GetPasswordMap(WorldSerialization _worldSerialization)
-        {
-            string prefabsCount = PassWordEncryption("mappassword", _worldSerialization.world.prefabs.Count);
-            return _worldSerialization.world.maps.FirstOrDefault(s => s.name == prefabsCount);
-        }
 
         private string PassWordEncryption(string password, int prefabs)
         {
             WebClient wc = new WebClient();
-            wc.Headers["User-Agent"] = useragent;
-            wc.Headers[HttpRequestHeader.ContentType] = header;
-            string result = wc.UploadString(URI, "p=" + prefabs + "&name=" + password);
+            wc.Headers["User-Agent"] = _useragent;
+            wc.Headers[HttpRequestHeader.ContentType] = _header;
+            string result = wc.UploadString(_uri, "p=" + prefabs + "&name=" + password);
             wc.Dispose();
             return result;
         }
@@ -163,9 +156,9 @@ namespace MapToolGUI
         private string GetPluginTemplate()
         {
             WebClient wc = new WebClient();
-            wc.Headers["User-Agent"] = useragent;
-            wc.Headers[HttpRequestHeader.ContentType] = header;
-            string result = wc.UploadString(URI, "plugin=download");
+            wc.Headers["User-Agent"] = _useragent;
+            wc.Headers[HttpRequestHeader.ContentType] = _header;
+            string result = wc.UploadString(_uri, "plugin=download");
             wc.Dispose();
             return result;
         }
@@ -173,49 +166,66 @@ namespace MapToolGUI
         private void GetPrefabIDS()
         {
             WebClient wc = new WebClient();
-            wc.Headers["User-Agent"] = useragent;
-            wc.Headers[HttpRequestHeader.ContentType] = header;
-            string[] prefabs = Encoding.UTF8.GetString(Compression.Uncompress(Convert.FromBase64String(wc.UploadString(URI, "prefabs=download")))).Split(',');
+            wc.Headers["User-Agent"] = _useragent;
+            wc.Headers[HttpRequestHeader.ContentType] = _header;
+            string[] prefabs = Encoding.UTF8.GetString(Compression.Uncompress(Convert.FromBase64String(wc.UploadString(_uri, "prefabs=download")))).Split(',');
             wc.Dispose();
             foreach (string prefab in prefabs)
             {
                 uint p = 0;
-                if (uint.TryParse(prefab, out p)) { ents.Add(p); }
+                if (uint.TryParse(prefab, out p)) { _ents.Add(p); }
             }
         }
 
         private void SetPassword(WorldSerialization _worldSerialization)
         {
-            var passwordMap = GetPasswordMap(_worldSerialization);
-            if (passwordMap == null)
+            string prefabhash = PassWordEncryption("mappassword", _worldSerialization.world.prefabs.Count);
+            if (_worldSerialization.world.maps.FirstOrDefault(s => s.name == prefabhash) == null)
             {
-                int prefabsCount = _worldSerialization.world.prefabs.Count;
-                var s = PassWordEncryption("mappassword", prefabsCount);
                 _worldSerialization.world.maps.Add(new MapData()
                 {
-                    name = s,
+                    name = prefabhash,
                     data = new byte[200000000],
                 });
                 return;
             }
         }
 
-        private PrefabData CreatePrefab(uint PrefabID,  VectorData scale, string cat = "decor")
+        private PrefabData CreatePrefab(uint PrefabID, string cat = @":\\test black:1:")
         {
             VectorData RandomVector = new VectorData();
-            try{RandomVector = _worldSerialization.world.prefabs[rnd.Next(_worldSerialization.world.prefabs.Count() - 1)].position;}catch { }
-            RandomVector.x += rnd.Next(-10, 10);
-            RandomVector.y += rnd.Next(-3, 3);
-            RandomVector.z += rnd.Next(-10, 10);
+            if (_worldSerialization.world.prefabs.Count < 420) //Random whole map since not many starting prefabs
+            {
+                RandomVector = new VectorData(_rnd.Next((_size / 3) * -1,_size / 3),_rnd.Next(-1,50), _rnd.Next((_size / 3) * -1, _size / 3));
+            }
+            else
+            {
+                try { RandomVector = _worldSerialization.world.prefabs[_rnd.Next(_worldSerialization.world.prefabs.Count() - 1)].position; } catch { }
+                RandomVector.x += _rnd.Next(-10, 10);
+                RandomVector.y += _rnd.Next(-3, 3);
+                RandomVector.z += _rnd.Next(-10, 10);
+            }
             var prefab = new PrefabData()
             {
                 category = cat,
                 id = PrefabID,
                 position = RandomVector,
-                rotation = new VectorData(rnd.Next(0, 359), rnd.Next(0, 359), rnd.Next(0, 359)),
-                scale = scale
+                rotation = new VectorData(_rnd.Next(0, 359), _rnd.Next(0, 359), _rnd.Next(0, 359)),
+                scale = new VectorData(1, 1, 1)
             };
             return prefab;
+        }
+
+        public List<PrefabData> ShufflePrefabs(List<PrefabData> listToShuffle)
+        {
+            for (int i = listToShuffle.Count - 1; i > 0; i--)
+            {
+                var k = _rnd.Next(i + 1);
+                var value = listToShuffle[k];
+                listToShuffle[k] = listToShuffle[i];
+                listToShuffle[i] = value;
+            }
+            return listToShuffle;
         }
 
         private void AddProtection_Click(object sender, EventArgs e)
@@ -241,17 +251,14 @@ namespace MapToolGUI
                 var deletePrefabs = new List<PD>();
                 var AddRE = new List<RE>();
                 var AddPrefabs = new List<PA>();
-                PrefabData pd = new PrefabData();
+                var pd = new PrefabData();
 
                 if (REProtect.Checked)
                 {
                     //Remove RustEditData (Maps started from client folder will have no rust edit extention data)
                     for (int i = _worldSerialization.world.maps.Count - 1; i >= 0; i--)
                     {
-                        if (Encoding.Default.GetString(_worldSerialization.world.maps[i].data).StartsWith("<?xml version")) 
-                        {
-                            AddRE.Add(new RE().New(_worldSerialization.world.maps[i].name, _worldSerialization.world.maps[i].data, _worldSerialization.world.prefabs.Count())); _worldSerialization.world.maps.RemoveAt(i);
-                        }
+                        if (System.Text.Encoding.Default.GetString(_worldSerialization.world.maps[i].data).StartsWith("<?xml version")) { AddRE.Add(new RE().New(_worldSerialization.world.maps[i].name, _worldSerialization.world.maps[i].data, _worldSerialization.world.prefabs.Count())); _worldSerialization.world.maps.RemoveAt(i); }
                     }
                 }
 
@@ -260,6 +267,7 @@ namespace MapToolGUI
                 {
                     if (deployprotect.Checked)
                     {
+
                         if (IsEntity(_worldSerialization.world.prefabs[i].id))
                         {
                             PrefabData p = _worldSerialization.world.prefabs[i];
@@ -272,7 +280,7 @@ namespace MapToolGUI
                     {
                         if (_worldSerialization.world.prefabs[i].id != 1724395471)//Ignore monument_marker
                         {
-                            _worldSerialization.world.prefabs[i].category = catstring;
+                            _worldSerialization.world.prefabs[i].category = @":\\test black:1:";
                         }
                     }
                 }
@@ -280,45 +288,55 @@ namespace MapToolGUI
                 if (EditProtect.Checked) 
                 {
                     //PumpJack Overflow
-                    pd = CreatePrefab(1599225199, new VectorData(0, 1, 0), new string('@', 20000));
+                    pd = CreatePrefab(1599225199, new string('@', 20000));
                     deletePrefabs.Add(new PD().New(pd.id, pd.position));
                     _worldSerialization.world.prefabs.Add(pd);
 
                     //MapData Overflow
-                    if (_worldSerialization.GetMap(catstring) == null) { _worldSerialization.AddMap(catstring, new byte[200000000]); }
                     if (_worldSerialization.GetMap("hieght") == null) { _worldSerialization.AddMap("hieght", new byte[200000000]); }
 
                     //Password Overflow Protection
                     SetPassword(_worldSerialization);
 
-                    //Menu Overflow
-                    foreach (var p in UIinterface)
-                    {
-                        pd = CreatePrefab(p, new VectorData(1, 1, 1), catstring);
-                        deletePrefabs.Add(new PD().New(pd.id, pd.position));
-                        _worldSerialization.world.prefabs.Add(pd);
-                    }
+                    //PumpJack Overflow
+                    pd = CreatePrefab(1237378647, new string('@', 20000));
+                    deletePrefabs.Add(new PD().New(pd.id, pd.position));
+                    _worldSerialization.world.prefabs.Add(pd);
 
                     //Size Overflow protection
-                    _worldSerialization.world.size = (uint)rnd.Next(111111111, int.MaxValue);
+                    _worldSerialization.world.size = (uint)_rnd.Next(111111111, int.MaxValue);
                 }
 
                 //Spawm Spam Prefabs (Plugin Removes Them)
                 int spam = 0;
                 if (int.TryParse(SpamAmount.Text, out spam))
                 {
+                    int pref = 0;
                     for (int i = 0; i < spam; i++)
                     {
-                        pd = CreatePrefab(ents[rnd.Next(ents.Count)], new VectorData(1, 1, 1), catstring);
+                        pd = CreatePrefab(_ents[pref]);
                         deletePrefabs.Add(new PD().New(pd.id, pd.position));
                         _worldSerialization.world.prefabs.Add(pd);
+                        pref++;
+                        if(pref >= _ents.Count) { pref = 0; }
                     }
                 }
+
+                //Shuffle PrefabList
+                _worldSerialization.world.prefabs = ShufflePrefabs(_worldSerialization.world.prefabs);
+
                 //Patch Plugin File And Save
-                plugin = plugin.Replace("%SIZE%", $"{_size}").Replace("%PREFABKEY%", $"{Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(deletePrefabs))))}").Replace("%ADDKEY%", $"{Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(AddPrefabs))))}").Replace("%REKEY%", $"{Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(AddRE))))}").Replace("\"", "\"\"").Replace(@"""""", @"""");
-                File.WriteAllText(Path.Combine(Path.GetDirectoryName(saveFileDialog1.FileName), "MapProtection.cs"), plugin);
+                File.WriteAllText(Path.Combine(Path.GetDirectoryName(saveFileDialog1.FileName), "MapProtection.cs"), _plugin.Replace("%SIZE%", $"{_size}").Replace("%PREFABKEY%", $"{Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(deletePrefabs))))}").Replace("%ADDKEY%", $"{Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(AddPrefabs))))}").Replace("%REKEY%", $"{Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(AddRE))))}").Replace("\"", "\"\"").Replace(@"""""", @""""));
                 _worldSerialization.Save(saveFileDialog1.FileName);
                 MessageBox.Show("Map Saved To " + saveFileDialog1.FileName + System.Environment.NewLine + deletePrefabs.Count + " Spam Prefabs / " + AddPrefabs.Count + " Removed Prefabs", "Saved File", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void SpamAmount_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(SpamAmount.SelectedIndex >= 6)
+            {
+                MessageBox.Show("High prefab counts in small areas can break phyics.\nTest map thoughly to confirm no issues.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
     }
