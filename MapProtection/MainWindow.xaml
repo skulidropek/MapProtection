@@ -51,6 +51,17 @@
 
         <Frame NavigationUIVisibility="Hidden" Content="{Binding CurrentPage}" />
 
+        <Image Source="/Images/CloseButton.png" Margin="1202,8,-3,696" RenderTransformOrigin="0.5,0.5" MouseDown="CloseUI">
+            <Image.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Image.RenderTransform>
+        </Image>
+
     </Grid>
 
 </Window>
