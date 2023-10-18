@@ -239,6 +239,7 @@ namespace MapUnlock.ViewModels
             File.WriteAllText(pluginFilePath, pluginContent);
             _worldSerialization.UpdatePassword();
             _worldSerialization.Save(_path + "protection.map");
+            MessageBox.Show($"Save for path {_path + "protection.map"}");
         }
 
         private WorldSerialization.PrefabData CreatePrefab(uint PrefabID, string cat)
