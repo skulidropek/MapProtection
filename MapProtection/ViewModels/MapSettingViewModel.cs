@@ -97,17 +97,6 @@ namespace MapUnlock.ViewModels
         public ICommand SaveMapCommand { get; }
         public ICommand SelectMapCommand { get; }
 
-        private string _name;
-        public string Name
-        {
-            get => _name;
-            set
-            {
-                _name = value;
-                OnPropertyChanged(nameof(Name));
-            }
-        }
-
         public MapSettingViewModel()
         {
             SaveMapCommand = new RelayCommand(SaveMapCommandExecute, (s) => !string.IsNullOrWhiteSpace(MapFile));
