@@ -28,7 +28,6 @@ namespace MapUnlock.ViewModels
         private List<PA> _addPrefabs = new List<PA>();
         private List<PD> _deletePrefabs = new List<PD>();
 
-        private string _mapFile;
         private bool _isAddProtectionEnabled = true;
         private string _spamAmount = "5000";
         private bool _isREProtectChecked = true;
@@ -37,10 +36,10 @@ namespace MapUnlock.ViewModels
 
         public string MapFile
         {
-            get { return _mapFile; }
+            get { return _path; }
             set
             {
-                _mapFile = value;
+                _path = value;
                 OnPropertyChanged("MapFile");
             }
         }
@@ -111,15 +110,15 @@ namespace MapUnlock.ViewModels
 
         public MapSettingViewModel()
         {
-            SaveMapCommand = new RelayCommand(SaveMapCommandExecute, (s) => !string.IsNullOrWhiteSpace(_path));
+            SaveMapCommand = new RelayCommand(SaveMapCommandExecute, (s) => !string.IsNullOrWhiteSpace(MapFile));
             SelectMapCommand = new RelayCommand(SelectMapCommandExecute);
         }
 
         private void SelectMapCommandExecute(object obj)
         {
-            _path = GetPathOpenFileDialog();
+            MapFile = GetPathOpenFileDialog();
 
-            if (string.IsNullOrEmpty(_path))
+            if (string.IsNullOrEmpty(MapFile))
             {
                 MessageBox.Show("Need choose path");
                 return;
@@ -128,7 +127,7 @@ namespace MapUnlock.ViewModels
 
         private void SaveMapCommandExecute(object obj)
         {
-            if (string.IsNullOrWhiteSpace(_path))
+            if (string.IsNullOrWhiteSpace(MapFile))
             {
                 MessageBox.Show("Need select map");
                 return;
