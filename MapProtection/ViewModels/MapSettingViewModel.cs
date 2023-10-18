@@ -111,8 +111,8 @@ namespace MapUnlock.ViewModels
 
         public MapSettingViewModel()
         {
-            SaveMapCommand = new RelayCommand(SaveMapCommandExecute);
-            SelectMapCommand = new RelayCommand(SelectMapCommandExecute, (s) => !string.IsNullOrWhiteSpace(_path));
+            SaveMapCommand = new RelayCommand(SaveMapCommandExecute, (s) => !string.IsNullOrWhiteSpace(_path));
+            SelectMapCommand = new RelayCommand(SelectMapCommandExecute);
         }
 
         private void SelectMapCommandExecute(object obj)
