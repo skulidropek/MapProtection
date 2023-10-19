@@ -46,11 +46,11 @@ namespace Oxide.Plugins
         {
             plugin = this;
             MapSize = uint.Parse(""%SIZE%"");
-            if(Key != ""%PREFABKEY%"")
+            if(Key.Length > 10)
                 RemovePrefabs = JsonConvert.DeserializeObject<List<PD>>(Encoding.UTF8.GetString(Compression.Uncompress(Convert.FromBase64String(Key))));
-            if(ADD != ""%ADDKEY%"")           
+            if(ADD.Length > 10)           
                 AddPrefabs = JsonConvert.DeserializeObject<List<PA>>(Encoding.UTF8.GetString(Compression.Uncompress(Convert.FromBase64String(ADD))));
-            if(RED != ""%REKEY%"")
+            if(RED.Length > 10)
                 AddRE = JsonConvert.DeserializeObject<List<RE>>(Encoding.UTF8.GetString(Compression.Uncompress(Convert.FromBase64String(RED))));
             _harmony = HarmonyInstance.Create(Name + ""PATCH"");
             Type[] patchType = { AccessTools.Inner(typeof(MapProtection), ""OnWorldLoad_hook""), };
