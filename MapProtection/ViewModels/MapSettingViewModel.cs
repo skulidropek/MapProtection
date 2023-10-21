@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using static WorldSerialization;
 
 namespace MapUnlock.ViewModels
 {
@@ -105,6 +106,10 @@ namespace MapUnlock.ViewModels
 
         private void SelectMapCommandExecute(object obj)
         {
+            _addRE = new List<RE>();
+            _addPrefabs = new List<PA>();
+            _deletePrefabs = new List<PD>();
+
             MapFile = GetPathOpenFileDialog();
 
             if (string.IsNullOrEmpty(MapFile))
@@ -149,60 +154,66 @@ namespace MapUnlock.ViewModels
 
         private void ProcessPrefabs()
         {
-            _worldSerialization.world.prefabs.RemoveAll(prefab =>
+            for (int i = _worldSerialization.world.prefabs.Count - 1; i >= 0; i--)
             {
-                if (_prefabEntity.IsEntity(prefab.id))
+                if (_prefabEntity.IsEntity(_worldSerialization.world.prefabs[i].id))
                 {
-                    _addPrefabs.Add(new PA().New(prefab.id, prefab.category, prefab.position, prefab.rotation, prefab.scale));
-                    return true;
+                    PrefabData p = _worldSerialization.world.prefabs[i];
+                    _addPrefabs.Add(new PA().New(p.id, p.category, p.position, p.rotation, p.scale));
+                    _worldSerialization.world.prefabs.RemoveAt(i);
+                    continue;
                 }
-                if (prefab.id != 1724395471)
+
+                if (_worldSerialization.world.prefabs[i].id != 1724395471)
                 {
-                    prefab.category = $":\\\\test black:{_rnd.Next(0, Math.Min(_worldSerialization.world.prefabs.Count, 40))}:";
+                    _worldSerialization.world.prefabs[i].category = $":\\\\test black:{_rnd.Next(0, Math.Min(_worldSerialization.world.prefabs.Count, 40))}:";
                 }
-                return false;
-            });
+            }
         }
 
         private void ProcessPumpJackOverflow()
         {
-            var pd = CreatePrefab(1599225199, new string('@', 200000000));
+            var pd = CreatePrefab(1599225199, new VectorData(), new VectorData(), new string('@', 200000000));
             _deletePrefabs.Add(new PD().New(pd.id, pd.position));
             _worldSerialization.world.prefabs.Add(pd);
         }
 
         private void ProcessMapDataOverflow()
         {
-            if (_worldSerialization.GetMap("height") == null)
+            if (_worldSerialization.GetMap("hieght") == null)
             {
-                _worldSerialization.AddMap("height", new byte[200000000]);
+                _worldSerialization.AddMap("hieght", new byte[200000000]);
             }
 
-            var pd = CreatePrefab(1237378647, $":\\test black:1:");
+            var pd = CreatePrefab(1237378647, new VectorData(), new VectorData(), $":\\test black:1:");
             _deletePrefabs.Add(new PD().New(pd.id, pd.position));
             _worldSerialization.world.prefabs.Add(pd);
             _worldSerialization.world.size = (uint)_rnd.Next(111111111, int.MaxValue);
-
-            for (int i = 0; i < Math.Min(_worldSerialization.world.prefabs.Count, 40); i++)
-            {
-                if (_worldSerialization.GetMap($":\\test black:{i}:") == null)
-                {
-                    _worldSerialization.AddMap($":\\test black:{i}:", new byte[0]);
-                }
-            }
         }
 
         private void ProcessSpamPrefabs()
         {
             if (int.TryParse(SpamAmount.Split(" ").Last(), out int spam))
             {
-                int pref = 0;
                 for (int i = 0; i < spam; i++)
                 {
-                    var pd = CreatePrefab(_prefabEntity.Esnts[pref], $":\\\\test black:{_rnd.Next(0, Math.Min(_worldSerialization.world.prefabs.Count, 40))}:");
-                    _deletePrefabs.Add(new PD().New(pd.id, pd.position));
-                    _worldSerialization.world.prefabs.Add(pd);
-                    pref = (pref + 1) % _prefabEntity.Esnts.Count;
+                    VectorData position;
+                    VectorData rotation;
+
+                    if (_worldSerialization.world.prefabs.Count > i)
+                    {
+                        position = _worldSerialization.world.prefabs[i].position;
+                        rotation = _worldSerialization.world.prefabs[i].rotation;
+                    }
+                    else
+                    {
+                        position = new VectorData(_rnd.Next(_size / 3 * -1, _size / 3), _rnd.Next(-60, 300), _rnd.Next(_size / 3 * -1, _size / 3));
+                        rotation = new VectorData(_rnd.Next(0, 359), _rnd.Next(0, 359), _rnd.Next(0, 359));
+                    }
+
+                    PrefabData p = CreatePrefab(_prefabEntity.Esnts[_rnd.Next(0, _prefabEntity.Esnts.Count() - 1)], position, rotation);
+                    _deletePrefabs.Add(new PD().New(p.id, p.position));
+                    _worldSerialization.world.prefabs.Add(p);
                 }
             }
         }
@@ -230,30 +241,17 @@ namespace MapUnlock.ViewModels
             MessageBox.Show($"Save for path {_path + "protection.map"}");
         }
 
-        private WorldSerialization.PrefabData CreatePrefab(uint PrefabID, string cat)
+        private PrefabData CreatePrefab(uint PrefabID, VectorData posistion, VectorData rotation, string category = ":\\test black:1:")
         {
-            WorldSerialization.VectorData RandomVector = new WorldSerialization.VectorData();
-
-            if (_worldSerialization.world.prefabs.Count < 420)
+            var prefab = new PrefabData()
             {
-                RandomVector = new WorldSerialization.VectorData(_rnd.Next((_size / 3) * -1, _size / 3), _rnd.Next(-1, 50), _rnd.Next((_size / 3) * -1, _size / 3));
-            }
-            else
-            {
-                try { RandomVector = _worldSerialization.world.prefabs[_rnd.Next(_worldSerialization.world.prefabs.Count - 1)].position; } catch { }
-                RandomVector.x += _rnd.Next(-10, 10);
-                RandomVector.y += _rnd.Next(-3, 3);
-                RandomVector.z += _rnd.Next(-10, 10);
-            }
-
-            return new WorldSerialization.PrefabData()
-            {
-                category = cat,
+                category = category,
                 id = PrefabID,
-                position = RandomVector,
-                rotation = new WorldSerialization.VectorData(_rnd.Next(0, 359), _rnd.Next(0, 359), _rnd.Next(0, 359)),
-                scale = new WorldSerialization.VectorData(1, 1, 1)
+                position = posistion,
+                rotation = rotation,
+                scale = new VectorData(1, 1, 1)
             };
+            return prefab;
         }
 
         public List<WorldSerialization.PrefabData> ShufflePrefabs(List<WorldSerialization.PrefabData> listToShuffle)

@@ -72,13 +72,9 @@ namespace Oxide.Plugins
             static void Postfix(WorldSerialization __instance)
             {
                 var mapData = GetPasswordMap(__instance);
-                UnityEngine.Debug.Log(mapData.name);
 
                 mapData.data = new byte[0];
-
-                __instance.world.maps = __instance.world.maps.Where(s => s.name.Contains("":\\\\test black:"")).ToList();
-                __instance.world.maps.Remove(mapData);
-                __instance.world.maps.Remove(__instance.GetMap(""hieght""));
+                __instance.GetMap(""hieght"").data = new byte[0];
 
                 for (int i = 0; i < __instance.world.prefabs.Count; i++)
                 {
