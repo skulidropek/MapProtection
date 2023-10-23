@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <None Remove="Images\Background.jpg" />
-    <None Remove="Images\CloseButton.png" />
+    <None Remove="Images\СloseButton.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,7 +47,8 @@
 
   <ItemGroup>
     <Resource Include="Images\Background.jpg" />
-    <Resource Include="Images\CloseButton.png" />
+    <Resource Include="Images\СloseButton.png" />
+
   </ItemGroup>
 
 </Project>
