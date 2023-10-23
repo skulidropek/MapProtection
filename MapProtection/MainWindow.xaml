@@ -11,6 +11,7 @@
         FontFamily="./#MontserratBold"
         WindowStartupLocation="CenterScreen"  
         MouseDown="BorderTopSection_MouseDown"
+        Icon="/Images/Logo.png"
         >
 
     <Grid>
@@ -32,8 +33,7 @@
             </Grid.Effect>
 
         </Grid>
-        <Label Content="MAP PROTECTION" Margin="0 20 0 0" FontWeight="Bold" FontSize="55" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-        <Label Content="by skuli dropek"  FontWeight="Bold" FontSize="15" Foreground="#FF9E9E9E"
+        <Label Content="Developed by: Skuli Dropek, bmgjet, maf" Margin="0 0 0 0" FontWeight="Bold" FontSize="15" Foreground="#FF9E9E9E"
                HorizontalAlignment="Center" VerticalAlignment="Bottom"/>
 
 

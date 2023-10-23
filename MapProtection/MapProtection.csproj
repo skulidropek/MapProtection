@@ -5,11 +5,17 @@
     <TargetFramework>net7.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Images\Background.jpg" />
+    <None Remove="Images\Logo.png" />
     <None Remove="Images\СloseButton.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="logo.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +53,7 @@
 
   <ItemGroup>
     <Resource Include="Images\Background.jpg" />
+    <Resource Include="Images\Logo.png" />
     <Resource Include="Images\СloseButton.png" />
 
   </ItemGroup>
