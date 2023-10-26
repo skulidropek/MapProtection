@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Ookii.Dialogs.Wpf;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -98,10 +99,15 @@ namespace MapUnlock.ViewModels
         public ICommand SaveMapCommand { get; }
         public ICommand SelectMapCommand { get; }
 
+        public ICommand OpenGithubCommand { get; }
+        public ICommand OpenDiscordCommand { get; }
+
         public MapSettingViewModel()
         {
             SaveMapCommand = new RelayCommand(SaveMapCommandExecute, (s) => !string.IsNullOrWhiteSpace(MapFile));
             SelectMapCommand = new RelayCommand(SelectMapCommandExecute);
+            OpenDiscordCommand = new RelayCommand(OpenDiscordCommandExecute);
+            OpenGithubCommand = new RelayCommand(OpenGithubCommandExecute);
         }
 
         private void SelectMapCommandExecute(object obj)
@@ -135,6 +141,24 @@ namespace MapUnlock.ViewModels
             ProcessSpamPrefabs();
             ShufflePrefabList();
             PatchAndSavePluginFile();
+        }
+
+        private void OpenDiscordCommandExecute(object obj)
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://discord.gg/CBqDuqDWvS",
+                UseShellExecute = true
+            });
+        }
+
+        private void OpenGithubCommandExecute(object obj)
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://github.com/skulidropek/MapProtection",
+                UseShellExecute = true
+            });
         }
 
         private void LoadWorldData()
@@ -254,7 +278,7 @@ namespace MapUnlock.ViewModels
             return prefab;
         }
 
-        public List<WorldSerialization.PrefabData> ShufflePrefabs(List<WorldSerialization.PrefabData> listToShuffle)
+        private List<PrefabData> ShufflePrefabs(List<PrefabData> listToShuffle)
         {
             for (int i = listToShuffle.Count - 1; i > 0; i--)
             {
