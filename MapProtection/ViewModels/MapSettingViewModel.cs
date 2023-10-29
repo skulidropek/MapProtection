@@ -252,11 +252,11 @@ namespace MapUnlock.ViewModels
             string pluginFilePath = Path.Combine(Path.GetDirectoryName(_path), "MapProtection.cs");
             string pluginContent = _rustPlugin.Plugin
                 .Replace("%SIZE%", $"{_size}")
-                .Replace("%PREFABKEY%", Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(_deletePrefabs))))
-                .Replace("%ADDKEY%", Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(_addPrefabs))))
-                .Replace("%REKEY%", Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(_addRE))))
+                .Replace("%ADDKEY%", Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(_addPrefabs)))))
+                .Replace("%REKEY%", Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(_addRE)))))
+                .Replace("%PREFABKEY%", Convert.ToBase64String(Compression.Compress(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(_deletePrefabs)))))
                 .Replace("\"", "\"\"")
-                .Replace(@"""""", @""""))))
+                .Replace(@"""""", @"""")
                 ;
 
             File.WriteAllText(pluginFilePath, pluginContent);
