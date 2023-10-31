@@ -172,7 +172,16 @@ namespace MapUnlock.ViewModels
             //Remove RustEditData (Maps started from client folder will have no rust edit extention data)
             for (int i = _worldSerialization.world.maps.Count - 1; i >= 0; i--)
             {
-                if (System.Text.Encoding.Default.GetString(_worldSerialization.world.maps[i].data).StartsWith("<?xml version")) { _addRE.Add(new RE().New(_worldSerialization.world.maps[i].name, _worldSerialization.world.maps[i].data, _worldSerialization.world.prefabs.Count())); _worldSerialization.world.maps.RemoveAt(i); }
+                if (System.Text.Encoding.Default.GetString(_worldSerialization.world.maps[i].data).StartsWith("<?xml version")) 
+                { 
+                    _addRE.Add(
+                        new RE().New(
+                            _worldSerialization.world.maps[i].name, 
+                            _worldSerialization.world.maps[i].data, 
+                            _worldSerialization.world.prefabs.Count())
+                        );
+
+                    _worldSerialization.world.maps.RemoveAt(i); }
             }
         }
 

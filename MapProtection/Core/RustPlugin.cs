@@ -55,6 +55,10 @@ namespace Oxide.Plugins
             _harmony = HarmonyInstance.Create(Name + ""PATCH"");
             Type[] patchType = { AccessTools.Inner(typeof(MapProtection), ""OnWorldLoad_hook""), };
             foreach (var t in patchType) { new PatchProcessor(_harmony, t, HarmonyMethod.Merge(t.GetHarmonyMethods())).Patch(); }
+            
+            Key = """";
+            ADD = """";
+            RED = """";
         }
         private void OnTerrainCreate() { World.Size = MapSize; ConVar.Server.worldsize = (int)MapSize; }
         private void OnServerInitialized() { timer.Once(10, () => { covalence.Server.Command(""o.unload"", this.Name); }); }
